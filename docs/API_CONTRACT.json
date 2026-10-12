@@ -2,7 +2,7 @@
   "meta": {
     "name": "Food Bank Volunteer Booking API",
     "version": "1.0.0",
-    "status": "draft",
+    "status": "frozen",
     "change_policy": "Any change to this contract requires explicit human approval and sign-off from Person A (frontend) and Person B (backend).",
     "source_of_truth_for": "Request and response shapes, status codes and error codes. Constraints come from CLAUDE.md section 2."
   },
