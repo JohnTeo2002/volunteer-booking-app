@@ -1,0 +1,23 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+# database
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node and frontend
+node_modules/
+dist/
