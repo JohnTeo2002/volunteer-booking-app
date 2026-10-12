@@ -1,0 +1,40 @@
+# .coderabbit.yaml - Optimized CodeRabbit Configuration
+language: "en-US"
+
+# 1. Review Strictness Profile
+reviews:
+  profile: "assertive" # Options: "chill" (fewer nitpicks) vs "assertive" (thorough security, style & edge-case checks)
+  request_changes_workflow: false # Set to true if you want CodeRabbit to formally block PR merges
+  high_level_summary: true # Automatically generates a concise summary of changes
+  sequence_diagrams: true # Generates visual flowcharts
+  poem: false # Keeps PR descriptions clean and professional
+  # 2. Path Filters (Ignore boilerplate, lockfiles & build artifacts)
+  path_filters:
+    - "!**/package-lock.json"
+    - "!**/yarn.lock"
+    - "!**/pnpm-lock.yaml"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/.next/**"
+    - "!**/node_modules/**"
+    - "!**/coverage/**"
+  # 3. Path-Specific Guidelines (Enforce Standards)
+  path_instructions:
+    - path: "**/*"
+      instructions: |
+        - Ensure all database operations use parameterized queries (prevent SQL injection).
+        - Verify secrets and API keys are loaded via environment variables, never hardcoded.
+        - Ensure server-side validation is present on all API inputs and financial/total calculations.
+        - Flag any unauthenticated or unprotected admin endpoints.
+  # 4. Triggering & Draft Settings
+  auto_review:
+    enabled: true
+    drafts: false # Don't waste review runs on Work-In-Progress draft PRs
+    base_branches:
+      - "main"
+      - "master"
+      - "dev"
+
+# 5. Interactive Chat Settings
+chat:
+  auto_reply: true # Automatically responds when tagged (@coderabbitai) in PR comments
