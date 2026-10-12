@@ -17,7 +17,7 @@
     "string_input": "All string inputs are trimmed before validation.",
     "email_normalization": "Email is trimmed and lowercased before storage and before duplicate checks.",
     "patterns": {
-      "PHONE_REGEX": "^[0-9+() .-]{7,20}$"
+      "PHONE_REGEX": "^(?=(?:\\D*\\d){7})[0-9+() .-]{7,20}$"
     },
     "pii": "Slot responses never contain PII. Only Booking responses contain names, emails and phone numbers."
   },
