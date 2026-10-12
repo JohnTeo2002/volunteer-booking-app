@@ -29,7 +29,7 @@ FastAPI gives you:
 ### 3. Database: SQLite (One File, No Hosting)
 
 - **Relational.** The capacity check is a single atomic SQL statement, not application logic.
-- **No hosting overhead.** One `.db` file, versioned in Git or backed up locally.
+- **No hosting overhead.** One `.db` file.
 - **No setup time.** Zero configuration.
 
 **Trade-off:** Writes are serialized, but this is fine at food-bank scale (not thousands of concurrent bookings).
