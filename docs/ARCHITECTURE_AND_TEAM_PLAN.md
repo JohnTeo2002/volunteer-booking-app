@@ -86,7 +86,7 @@ BEGIN TRANSACTION;
 UPDATE volunteer_slots 
   SET booked = booked + 1
   WHERE id = ? AND booked < capacity;
-  -- If 0 rows changed: capacity is full, will violate UNIQUE check → rollback
+  -- If 0 rows changed: capacity is full (rowcount == 0 -> raise 409 SLOT_FULL) -> rollback
 
 INSERT INTO bookings 
   (slot_id, volunteer_name, email, phone) 
@@ -322,7 +322,7 @@ COMMIT;
 #### **Hour 4 (1:00 PM – 2:00 PM): Dashboard & Polish**
 
 **Person A (Frontend):**
-- Build the Dashboard with Recharts utilization chart (total booked vs capacity over time)
+- Build the Dashboard with Recharts utilization chart (per-slot booked vs capacity; do NOT chart over time)
 - Polish UI: responsive design, error messages, loading states
 
 **Person B (Backend):**
