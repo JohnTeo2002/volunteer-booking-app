@@ -125,7 +125,7 @@ except Exception:
 {"error": {"code": "SLOT_FULL", "message": "This slot is full.", "details": null}}
 ```
 - Override `RequestValidationError` and `HTTPException` in `main.py` so they produce this envelope. Raise errors as `HTTPException(status, detail={"code": ..., "message": ...})`.
-- Codes: `VALIDATION_ERROR` 422, `SLOT_NOT_FOUND` 404, `SLOT_FULL` 409, `DUPLICATE_BOOKING` 409, `UNAUTHORIZED` 403, `RATE_LIMITED` 429, `INTERNAL_ERROR` 500.
+- Codes: VALIDATION_ERROR 422, SLOT_NOT_FOUND 404, BOOKING_NOT_FOUND 404, SLOT_FULL 409, DUPLICATE_BOOKING 409, UNAUTHORIZED 403, RATE_LIMITED 429, INTERNAL_ERROR 500.
 - Never return stack traces or raw exception text.
 
 ---
