@@ -1,0 +1,249 @@
+{
+  "meta": {
+    "name": "Food Bank Volunteer Booking API",
+    "version": "1.0.0",
+    "status": "frozen",
+    "change_policy": "Any change to this contract requires explicit human approval and sign-off from Person A (frontend) and Person B (backend).",
+    "source_of_truth_for": "Request and response shapes, status codes and error codes. Constraints come from CLAUDE.md section 2."
+  },
+  "conventions": {
+    "json_keys": "snake_case",
+    "content_type": "application/json",
+    "path_prefix": "none. Paths have no /api prefix.",
+    "base_url": "Set by frontend configuration (VITE_API_URL). Never hardcoded in this contract.",
+    "date_format": "YYYY-MM-DD",
+    "time_format": "HH:MM, 24-hour, in the food bank's local time (no offset)",
+    "timestamp_format": "ISO 8601 in UTC with a Z suffix, for example 2026-10-12T14:30:00Z",
+    "string_input": "All string inputs are trimmed before validation.",
+    "email_normalization": "Email is trimmed and lowercased before storage and before duplicate checks.",
+    "patterns": {
+      "PHONE_REGEX": "^(?=(?:\\D*\\d){7})[0-9+() .-]{7,20}$"
+    },
+    "pii": "Slot responses never contain PII. Only Booking responses contain names, emails and phone numbers."
+  },
+  "schemas": {
+    "Slot": {
+      "description": "A volunteer shift. Contains no PII.",
+      "fields": {
+        "id": { "type": "integer", "required": true, "minimum": 1 },
+        "event_id": { "type": "integer", "required": true, "minimum": 1 },
+        "date": { "type": "string", "required": true, "format": "YYYY-MM-DD" },
+        "start_time": { "type": "string", "required": true, "format": "HH:MM" },
+        "end_time": { "type": "string", "required": true, "format": "HH:MM" },
+        "capacity": { "type": "integer", "required": true, "minimum": 1 },
+        "booked": { "type": "integer", "required": true, "minimum": 0 },
+        "remaining": { "type": "integer", "required": true, "minimum": 0, "computed": "capacity - booked" }
+      }
+    },
+    "BookingRequest": {
+      "description": "Body of POST /book.",
+      "fields": {
+        "slot_id": { "type": "integer", "required": true, "minimum": 1 },
+        "volunteer_name": { "type": "string", "required": true, "trim": true, "min_length": 1, "max_length": 100 },
+        "email": { "type": "string", "required": true, "trim": true, "lowercase": true, "format": "email", "max_length": 254 },
+        "phone": { "type": "string", "required": true, "trim": true, "max_length": 20, "pattern": "PHONE_REGEX" }
+      }
+    },
+    "Booking": {
+      "description": "A stored booking. Contains PII. Email is returned in its normalized (lowercase) form.",
+      "fields": {
+        "id": { "type": "integer", "required": true, "minimum": 1 },
+        "slot_id": { "type": "integer", "required": true, "minimum": 1 },
+        "volunteer_name": { "type": "string", "required": true, "max_length": 100 },
+        "email": { "type": "string", "required": true, "format": "email", "max_length": 254 },
+        "phone": { "type": "string", "required": true, "max_length": 20, "pattern": "PHONE_REGEX" },
+        "created_at": { "type": "string", "required": true, "format": "ISO 8601 UTC with Z suffix" }
+      }
+    }
+  },
+  "error_envelope": {
+    "description": "Every error response, including framework 404 and 422, uses this shape.",
+    "shape": {
+      "error": {
+        "code": "string, one of error_codes",
+        "message": "string, safe to display to the user",
+        "details": "array of {field, message} for VALIDATION_ERROR, null for every other code"
+      }
+    },
+    "rules": [
+      "Never include stack traces.",
+      "Never include raw exception text."
+    ],
+    "example": {
+      "error": { "code": "SLOT_FULL", "message": "This slot is full.", "details": null }
+    }
+  },
+  "error_codes": {
+    "VALIDATION_ERROR": { "status": 422, "default_message": "The request contains invalid data.", "details": "array of {field, message}" },
+    "SLOT_NOT_FOUND": { "status": 404, "default_message": "Slot not found.", "details": null },
+    "BOOKING_NOT_FOUND": { "status": 404, "default_message": "Booking not found.", "details": null },
+    "SLOT_FULL": { "status": 409, "default_message": "This slot is full.", "details": null },
+    "DUPLICATE_BOOKING": { "status": 409, "default_message": "You have already booked this slot.", "details": null },
+    "UNAUTHORIZED": { "status": 403, "default_message": "Admin access required.", "details": null },
+    "RATE_LIMITED": { "status": 429, "default_message": "Too many requests. Please try again later.", "details": null },
+    "INTERNAL_ERROR": { "status": 500, "default_message": "Something went wrong. Please try again later.", "details": null }
+  },
+  "endpoints": {
+    "get_slots": {
+      "method": "GET",
+      "path": "/slots",
+      "auth": { "required": false },
+      "rate_limited": false,
+      "parameters": {
+        "query": {
+          "event_id": { "type": "integer", "required": false, "minimum": 1 },
+          "date": { "type": "string", "required": false, "format": "YYYY-MM-DD" }
+        }
+      },
+      "request_example": "GET /slots?event_id=1&date=2026-10-17",
+      "success": {
+        "status": 200,
+        "description": "Bare array of Slot, ordered by date, start_time, id.",
+        "body": [
+          { "id": 1, "event_id": 1, "date": "2026-10-17", "start_time": "09:00", "end_time": "12:00", "capacity": 10, "booked": 4, "remaining": 6 },
+          { "id": 2, "event_id": 1, "date": "2026-10-17", "start_time": "13:00", "end_time": "16:00", "capacity": 8, "booked": 8, "remaining": 0 }
+        ]
+      },
+      "errors": [
+        {
+          "code": "VALIDATION_ERROR",
+          "status": 422,
+          "example": {
+            "error": {
+              "code": "VALIDATION_ERROR",
+              "message": "The request contains invalid data.",
+              "details": [{ "field": "date", "message": "Date must be in YYYY-MM-DD format." }]
+            }
+          }
+        },
+        {
+          "code": "INTERNAL_ERROR",
+          "status": 500,
+          "example": { "error": { "code": "INTERNAL_ERROR", "message": "Something went wrong. Please try again later.", "details": null } }
+        }
+      ]
+    },
+    "post_book": {
+      "method": "POST",
+      "path": "/book",
+      "auth": { "required": false },
+      "rate_limited": true,
+      "parameters": { "body": "BookingRequest" },
+      "request_example": {
+        "slot_id": 1,
+        "volunteer_name": "Jane",
+        "email": "jane@example.com",
+        "phone": "555-1234"
+      },
+      "success": {
+        "status": 201,
+        "description": "The created Booking.",
+        "body": {
+          "id": 42,
+          "slot_id": 1,
+          "volunteer_name": "Jane",
+          "email": "jane@example.com",
+          "phone": "555-1234",
+          "created_at": "2026-10-12T14:30:00Z"
+        }
+      },
+      "errors": [
+        {
+          "code": "VALIDATION_ERROR",
+          "status": 422,
+          "example": {
+            "error": {
+              "code": "VALIDATION_ERROR",
+              "message": "The request contains invalid data.",
+              "details": [{ "field": "email", "message": "Enter a valid email address." }]
+            }
+          }
+        },
+        {
+          "code": "SLOT_NOT_FOUND",
+          "status": 404,
+          "example": { "error": { "code": "SLOT_NOT_FOUND", "message": "Slot not found.", "details": null } }
+        },
+        {
+          "code": "SLOT_FULL",
+          "status": 409,
+          "example": { "error": { "code": "SLOT_FULL", "message": "This slot is full.", "details": null } }
+        },
+        {
+          "code": "DUPLICATE_BOOKING",
+          "status": 409,
+          "description": "Same slot_id and same normalized email.",
+          "example": { "error": { "code": "DUPLICATE_BOOKING", "message": "You have already booked this slot.", "details": null } }
+        },
+        {
+          "code": "RATE_LIMITED",
+          "status": 429,
+          "example": { "error": { "code": "RATE_LIMITED", "message": "Too many requests. Please try again later.", "details": null } }
+        },
+        {
+          "code": "INTERNAL_ERROR",
+          "status": 500,
+          "example": { "error": { "code": "INTERNAL_ERROR", "message": "Something went wrong. Please try again later.", "details": null } }
+        }
+      ]
+    },
+    "get_booking": {
+      "method": "GET",
+      "path": "/booking/{id}",
+      "auth": { "required": true, "header": "X-Admin-Token" },
+      "rate_limited": true,
+      "parameters": {
+        "header": { "X-Admin-Token": { "type": "string", "required": true } },
+        "path": { "id": { "type": "integer", "required": true, "minimum": 1 } }
+      },
+      "request_example": "GET /booking/42 with header X-Admin-Token: <token>",
+      "success": {
+        "status": 200,
+        "description": "The Booking.",
+        "body": {
+          "id": 42,
+          "slot_id": 1,
+          "volunteer_name": "Jane",
+          "email": "jane@example.com",
+          "phone": "555-1234",
+          "created_at": "2026-10-12T14:30:00Z"
+        }
+      },
+      "errors": [
+        {
+          "code": "UNAUTHORIZED",
+          "status": 403,
+          "description": "Returned for a missing token, an unset server secret, or a token mismatch.",
+          "example": { "error": { "code": "UNAUTHORIZED", "message": "Admin access required.", "details": null } }
+        },
+        {
+          "code": "VALIDATION_ERROR",
+          "status": 422,
+          "description": "Returned when id is 0 or negative.",
+          "example": {
+            "error": {
+              "code": "VALIDATION_ERROR",
+              "message": "The request contains invalid data.",
+              "details": [{ "field": "id", "message": "Must be greater than 0." }]
+            }
+          }
+        },
+        {
+          "code": "BOOKING_NOT_FOUND",
+          "status": 404,
+          "example": { "error": { "code": "BOOKING_NOT_FOUND", "message": "Booking not found.", "details": null } }
+        },
+        {
+          "code": "RATE_LIMITED",
+          "status": 429,
+          "example": { "error": { "code": "RATE_LIMITED", "message": "Too many requests. Please try again later.", "details": null } }
+        },
+        {
+          "code": "INTERNAL_ERROR",
+          "status": 500,
+          "example": { "error": { "code": "INTERNAL_ERROR", "message": "Something went wrong. Please try again later.", "details": null } }
+        }
+      ]
+    }
+  }
+}
