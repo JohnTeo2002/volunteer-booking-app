@@ -13,7 +13,9 @@ def require_admin(x_admin_token: str | None = Header(default=None)) -> None:
     if (
         not expected
         or not x_admin_token
-        or not hmac.compare_digest(x_admin_token, expected)
+        or not hmac.compare_digest(
+            x_admin_token.encode("utf-8"), expected.encode("utf-8")
+        )
     ):
         raise HTTPException(
             status_code=403,
