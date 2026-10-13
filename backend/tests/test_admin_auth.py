@@ -1,5 +1,8 @@
 """Unit and integration tests for admin authentication."""
 
+import pytest
+from fastapi.testclient import TestClient
+
 import app.config as app_config
 from app.db import get_connection
 
@@ -111,3 +114,12 @@ def test_admin_booking_non_ascii_token_returns_403(client):
     )
     assert response.status_code == 403
     assert response.json()["error"]["code"] == "UNAUTHORIZED"
+
+
+def test_empty_admin_token_fails_fast_on_startup(monkeypatch):
+    import app.main as main_module
+
+    monkeypatch.setattr(main_module, "ADMIN_TOKEN", "")
+    with pytest.raises(RuntimeError, match="ADMIN_TOKEN"):
+        with TestClient(main_module.app):
+            pass
