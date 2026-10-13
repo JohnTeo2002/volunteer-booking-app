@@ -6,7 +6,6 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
 from app.config import CORS_ORIGINS
@@ -31,7 +30,19 @@ app.include_router(slots_router)
 app.include_router(bookings_router)
 app.include_router(admin_router, prefix="/booking", tags=["admin"])
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exception_handler(
+    request: Request, exc: RateLimitExceeded
+) -> JSONResponse:
+    """Return rate limit failures in the standard API error envelope."""
+    return JSONResponse(
+        status_code=429,
+        content=error_envelope(
+            "RATE_LIMITED",
+            "Too many requests. Please try again later.",
+            details=None,
+        ),
+    )
 
 # CORS middleware
 app.add_middleware(
