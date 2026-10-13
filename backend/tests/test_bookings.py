@@ -1,12 +1,14 @@
 """Tests for the atomic POST /book transaction and API contract."""
 
-import sqlite3
 from concurrent.futures import ThreadPoolExecutor
+import os
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.db import get_connection, init_db
+os.environ.setdefault("ADMIN_TOKEN", "secret-token")
+
 from app.main import app
 
 
@@ -167,17 +169,11 @@ def test_concurrent_booking_never_overbooks(client, db_path):
     assert_consistent(db_path, slot_id, 5)
 
 
-def test_rollback_on_unexpected_insert_failure(db_path, monkeypatch):
+def test_rollback_on_unexpected_insert_failure(db_path):
     """Unexpected database failures must not leave a booked increment."""
     from app.db import create_booking
 
     slot_id = insert_slot(db_path)
-    real_connect = sqlite3.connect
-
-    def connect(*args, **kwargs):
-        return real_connect(*args, **kwargs)
-
-    monkeypatch.setattr(sqlite3, "connect", connect)
     # Trigger an error after the counter update with a temporary SQLite trigger.
     conn = get_connection(db_path)
     try:
