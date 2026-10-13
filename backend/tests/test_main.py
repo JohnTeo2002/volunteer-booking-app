@@ -3,7 +3,6 @@
 import os
 
 from fastapi import HTTPException
-from fastapi.testclient import TestClient
 from pydantic import BaseModel, Field
 
 # Ensure ADMIN_TOKEN is set for testing
@@ -11,9 +10,6 @@ os.environ["ADMIN_TOKEN"] = "secret-token"
 
 from app.config import ADMIN_TOKEN, CORS_ORIGINS
 from app.main import app
-
-client = TestClient(app, raise_server_exceptions=False)
-
 
 def test_config_admin_token():
     """Verify ADMIN_TOKEN is configured."""
@@ -52,7 +48,7 @@ def dummy_500():
     raise RuntimeError("Internal database failure with secret stack trace")
 
 
-def test_validation_error_envelope():
+def test_validation_error_envelope(client):
     """Verify 422 error returns standard error envelope."""
     response = client.post("/test-validation", json={"value": -1})
     assert response.status_code == 422
@@ -63,7 +59,7 @@ def test_validation_error_envelope():
     assert isinstance(data["error"]["details"], list)
 
 
-def test_not_found_error_envelope():
+def test_not_found_error_envelope(client):
     """Verify 404 error returns standard error envelope."""
     response = client.get("/test-404")
     assert response.status_code == 404
@@ -72,7 +68,7 @@ def test_not_found_error_envelope():
     assert data["error"]["details"] is None
 
 
-def test_structured_error_envelope():
+def test_structured_error_envelope(client):
     """Verify structured HTTPException returns standard error envelope."""
     response = client.get("/test-structured-error")
     assert response.status_code == 409
@@ -81,7 +77,7 @@ def test_structured_error_envelope():
     assert data["error"]["message"] == "This slot is full."
 
 
-def test_unhandled_exception_no_stack_trace():
+def test_unhandled_exception_no_stack_trace(client):
     """Verify 500 error returns envelope and hides stack traces."""
     response = client.get("/test-500")
     assert response.status_code == 500

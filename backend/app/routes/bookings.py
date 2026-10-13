@@ -2,16 +2,19 @@
 
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
+from app.config import BOOKING_RATE_LIMIT
 from app.db import DuplicateBooking, SlotFull, SlotNotFound, create_booking
+from app.rate_limit import limiter
 from app.schemas import BookingRequest, BookingResponse
 
 router = APIRouter()
 
 
 @router.post("/book", response_model=BookingResponse, status_code=201)
-def book_slot(booking: BookingRequest) -> BookingResponse:
+@limiter.limit(BOOKING_RATE_LIMIT)
+def book_slot(request: Request, booking: BookingRequest) -> BookingResponse:
     """Atomically create a booking and return the contract response."""
     try:
         result = create_booking(
