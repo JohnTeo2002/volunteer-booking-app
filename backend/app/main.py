@@ -20,7 +20,9 @@ from app.routes.slots import router as slots_router
 async def lifespan(app: FastAPI):
     """Initialize database tables on startup and handle lifespan events."""
     if not ADMIN_TOKEN:
-        raise RuntimeError("CRITICAL: ADMIN_TOKEN environment variable is unset or empty.")
+        raise RuntimeError(
+            "CRITICAL: ADMIN_TOKEN environment variable is unset or empty."
+        )
     init_db()
     yield
 
@@ -32,6 +34,8 @@ app.include_router(slots_router)
 app.include_router(bookings_router)
 app.include_router(admin_router, prefix="/booking", tags=["admin"])
 app.state.limiter = limiter
+
+
 @app.exception_handler(RateLimitExceeded)
 async def rate_limit_exception_handler(
     request: Request, exc: RateLimitExceeded
