@@ -1,6 +1,5 @@
 """Tests for the atomic POST /book transaction and API contract."""
 
-import os
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
 
@@ -8,9 +7,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.db import get_connection, init_db
-
-os.environ.setdefault("ADMIN_TOKEN", "secret-token")
-
 from app.main import app
 
 
