@@ -74,3 +74,70 @@ def get_slots(
         return [dict(row) for row in rows]
     finally:
         conn.close()
+
+
+class SlotNotFound(Exception):
+    """Raised when a requested volunteer slot does not exist."""
+
+
+class SlotFull(Exception):
+    """Raised when a volunteer slot has no remaining capacity."""
+
+
+class DuplicateBooking(Exception):
+    """Raised when an email already has a booking for the requested slot."""
+
+
+def create_booking(
+    slot_id: int,
+    volunteer_name: str,
+    email: str,
+    phone: str,
+    db_path: str | Path | None = None,
+) -> dict[str, int | str]:
+    """Atomically reserve a slot and insert a booking.
+
+    The counter and booking insert are committed together or both rolled back.
+    """
+    conn = get_connection(db_path)
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            exists = conn.execute(
+                "SELECT 1 FROM volunteer_slots WHERE id = ?", (slot_id,)
+            ).fetchone()
+            if exists is None:
+                raise SlotNotFound
+
+            updated = conn.execute(
+                "UPDATE volunteer_slots SET booked = booked + 1 "
+                "WHERE id = ? AND booked < capacity",
+                (slot_id,),
+            )
+            if updated.rowcount == 0:
+                raise SlotFull
+
+            try:
+                cursor = conn.execute(
+                    "INSERT INTO bookings (slot_id, volunteer_name, email, phone) "
+                    "VALUES (?, ?, ?, ?)",
+                    (slot_id, volunteer_name, email, phone),
+                )
+            except sqlite3.IntegrityError as exc:
+                raise DuplicateBooking from exc
+
+            row = conn.execute(
+                "SELECT id, slot_id, volunteer_name, email, phone, created_at "
+                "FROM bookings WHERE id = ?",
+                (cursor.lastrowid,),
+            ).fetchone()
+            if row is None:
+                raise RuntimeError("Inserted booking could not be retrieved")
+            booking: dict[str, int | str] = dict(row)
+            conn.execute("COMMIT")
+            return booking
+        except Exception:
+            conn.execute("ROLLBACK")
+            raise
+    finally:
+        conn.close()
