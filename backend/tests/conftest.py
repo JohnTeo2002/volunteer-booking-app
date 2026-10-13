@@ -7,7 +7,7 @@ from fastapi.testclient import TestClient
 
 # These values are only defaults; callers can still provide their own test config.
 os.environ.setdefault("ADMIN_TOKEN", "test-admin-token")
-os.environ.setdefault("DISABLE_RATE_LIMIT", "1")
+os.environ["DISABLE_RATE_LIMIT"] = "1"
 
 
 @pytest.fixture
