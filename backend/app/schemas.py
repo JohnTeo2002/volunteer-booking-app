@@ -55,3 +55,14 @@ class SlotResponse(BaseModel):
     capacity: int = Field(ge=1)
     booked: int = Field(ge=0)
     remaining: int = Field(ge=0)
+
+
+class BookingResponse(BaseModel):
+    """Booking returned by POST /book, matching the frozen API contract."""
+
+    id: int = Field(ge=1)
+    slot_id: int = Field(ge=1)
+    volunteer_name: str = Field(min_length=1, max_length=100)
+    email: EmailStr = Field(max_length=254)
+    phone: str = Field(max_length=20)
+    created_at: str
