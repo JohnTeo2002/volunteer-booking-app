@@ -37,3 +37,40 @@ def init_db(db_path: str | Path | None = None) -> None:
         conn.executescript(schema_sql)
     finally:
         conn.close()
+
+
+def get_slots(
+    event_id: int | None = None,
+    date: str | None = None,
+    db_path: str | Path | None = None,
+) -> list[dict[str, int | str]]:
+    """Return matching slots without exposing booking PII.
+
+    Compute remaining capacity in SQLite and sort by date, start time, and ID.
+    """
+    conditions: list[str] = []
+    parameters: list[int | str] = []
+
+    if event_id is not None:
+        conditions.append("event_id = ?")
+        parameters.append(event_id)
+
+    if date is not None:
+        conditions.append("date = ?")
+        parameters.append(date)
+
+    query = (
+        "SELECT id, event_id, date, start_time, end_time, capacity, booked, "
+        "(capacity - booked) AS remaining "
+        "FROM volunteer_slots"
+    )
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+    query += " ORDER BY date, start_time, id"
+
+    conn = get_connection(db_path)
+    try:
+        rows = conn.execute(query, parameters).fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
