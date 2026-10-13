@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
-from app.config import CORS_ORIGINS
+from app.config import ADMIN_TOKEN, CORS_ORIGINS
 from app.db import init_db
 from app.rate_limit import limiter
 from app.routes.admin import router as admin_router
@@ -19,6 +19,8 @@ from app.routes.slots import router as slots_router
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize database tables on startup and handle lifespan events."""
+    if not ADMIN_TOKEN:
+        raise RuntimeError("CRITICAL: ADMIN_TOKEN environment variable is unset or empty.")
     init_db()
     yield
 
