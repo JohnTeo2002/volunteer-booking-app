@@ -1,6 +1,7 @@
 """Tests for the atomic POST /book transaction and API contract."""
 
 from concurrent.futures import ThreadPoolExecutor
+import sqlite3
 import os
 
 import pytest
@@ -183,6 +184,6 @@ def test_rollback_on_unexpected_insert_failure(db_path):
         )
     finally:
         conn.close()
-    with pytest.raises(Exception):
+    with pytest.raises(sqlite3.IntegrityError, match="injected failure"):
         create_booking(slot_id, "Jane", "jane@example.com", "555-1234", db_path)
     assert_consistent(db_path, slot_id, 0)
