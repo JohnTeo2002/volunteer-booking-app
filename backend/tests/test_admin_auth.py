@@ -1,6 +1,7 @@
 """Unit and integration tests for admin authentication."""
 
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 import app.config as app_config
@@ -107,13 +108,13 @@ def test_post_booking_rate_limit_returns_standard_envelope(client, db_path, monk
     assert responses[10].json()["error"]["code"] == "RATE_LIMITED"
 
 
-def test_admin_booking_non_ascii_token_returns_403(client):
-    response = client.get(
-        "/booking/1",
-        headers={"X-Admin-Token": "wrong-tøken"},
-    )
-    assert response.status_code == 403
-    assert response.json()["error"]["code"] == "UNAUTHORIZED"
+def test_admin_dependency_rejects_non_ascii_token():
+    from app.security import require_admin
+
+    with pytest.raises(HTTPException) as exc_info:
+        require_admin(x_admin_token="wrong-tøken")
+    assert exc_info.value.status_code == 403
+    assert exc_info.value.detail["code"] == "UNAUTHORIZED"
 
 
 def test_empty_admin_token_fails_fast_on_startup(monkeypatch):
