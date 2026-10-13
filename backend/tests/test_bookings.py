@@ -69,6 +69,25 @@ def assert_consistent(db_path, slot_id, expected):
         conn.close()
 
 
+@pytest.fixture(autouse=True)
+def assert_all_slot_counters_match_booking_rows(request):
+    """After each booking test, ensure booked matches persisted booking rows."""
+    yield
+    db_path = request.getfixturevalue("db_path")
+    conn = get_connection(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT id, booked FROM volunteer_slots ORDER BY id"
+        ).fetchall()
+        for row in rows:
+            booking_count = conn.execute(
+                "SELECT COUNT(*) FROM bookings WHERE slot_id = ?", (row["id"],)
+            ).fetchone()[0]
+            assert row["booked"] == booking_count
+    finally:
+        conn.close()
+
+
 def test_success_returns_201_booking_and_increments_once(client, db_path):
     """Successful booking creates exactly one row and returns ISO UTC time."""
     slot_id = insert_slot(db_path)
