@@ -146,7 +146,6 @@ def create_booking(
         conn.close()
 
 
-
 def get_booking(
     booking_id: int, db_path: str | Path | None = None
 ) -> dict[str, int | str] | None:
