@@ -1,8 +1,8 @@
 """Database connection and initialization module for SQLite."""
 
 import os
-from pathlib import Path
 import sqlite3
+from pathlib import Path
 
 # Default DB path if DB_PATH environment variable is not set
 DEFAULT_DB_PATH = "app.db"
