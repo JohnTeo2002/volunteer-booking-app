@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchSlots } from '../api/client';
 import type { Slot } from '../types/api';
 
@@ -23,18 +23,6 @@ export function useSlots(): UseSlotsResult {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [isStale, setIsStale] = useState(false);
-
-  const pollSlots = useCallback(async () => {
-    try {
-      const latestSlots = await fetchSlots();
-      setSlots(latestSlots);
-      setLastUpdated(formatTime(new Date()));
-      setIsStale(false);
-    } catch {
-      // Keep the last successful data and timestamp; show that it's stale.
-      setIsStale(true);
-    }
-  }, []);
 
   useEffect(() => {
     let isMounted = true;
