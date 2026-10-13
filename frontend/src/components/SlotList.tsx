@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { Alert, Button, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
 import type { Slot } from '../types/api';
 import { useSlots } from '../hooks/useSlots';
+import BookingForm from './BookingForm';
 
 export default function SlotList() {
   const { slots, lastUpdated, isStale } = useSlots();
+  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
   const columns: TableColumnsType<Slot> = [
     {
@@ -33,13 +36,21 @@ export default function SlotList() {
       key: 'action',
       render: (_, slot) => (
         <Space>
-          <Button type="primary" disabled={slot.remaining === 0}>
+          <Button
+            type="primary"
+            disabled={slot.remaining === 0}
+            onClick={() => setSelectedSlot(slot)}
+          >
             Book
           </Button>
         </Space>
       ),
     },
   ];
+
+  const handleBookingSuccess = () => {
+    setSelectedSlot(null);
+  };
 
   return (
     <section aria-labelledby="available-slots-heading">
@@ -65,6 +76,15 @@ export default function SlotList() {
         pagination={false}
         locale={{ emptyText: 'No volunteer slots available' }}
       />
+      {selectedSlot && (
+        <BookingForm
+          key={selectedSlot.id}
+          slot={selectedSlot}
+          open
+          onCancel={() => setSelectedSlot(null)}
+          onSuccess={handleBookingSuccess}
+        />
+      )}
     </section>
   );
 }
