@@ -2,10 +2,11 @@
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 
 from app.config import ADMIN_TOKEN
-from app.db import get_connection, init_db, get_slots
+from app.db import get_connection, get_slots, init_db
+from app.security import require_admin
 from seed import seed_demo_slots
 
 
@@ -42,7 +43,7 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/persistence-test")
+@app.post("/persistence-test", dependencies=[Depends(require_admin)])
 def create_persistence_test_rows() -> dict[str, int]:
     """Create idempotent demo rows to verify persistence across redeploys."""
     inserted = seed_demo_slots()
