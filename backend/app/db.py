@@ -124,7 +124,9 @@ def create_booking(
                     (slot_id, volunteer_name, email, phone),
                 )
             except sqlite3.IntegrityError as exc:
-                raise DuplicateBooking from exc
+                if getattr(exc, "sqlite_errorname", None) == "SQLITE_CONSTRAINT_UNIQUE":
+                    raise DuplicateBooking from exc
+                raise
 
             row = conn.execute(
                 "SELECT id, slot_id, volunteer_name, email, phone, created_at "
