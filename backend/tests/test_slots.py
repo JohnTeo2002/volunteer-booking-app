@@ -76,12 +76,12 @@ def test_get_slots_computes_remaining_and_sorts_results(db_path):
     """Results are ordered by date, start time, and ID with remaining computed."""
     rows = get_slots(db_path=db_path)
     assert [(row["date"], row["start_time"], row["id"]) for row in rows] == [
-        ("2026-10-17", "09:00", 4),
         ("2026-10-17", "09:00", 3),
+        ("2026-10-17", "09:00", 4),
         ("2026-10-17", "13:00", 2),
         ("2026-10-18", "13:00", 1),
     ]
-    assert [row["remaining"] for row in rows] == [5, 6, 5, 0]
+    assert [row["remaining"] for row in rows] == [6, 5, 5, 0]
 
 
 @pytest.mark.parametrize(("event_id", "expected_count"), [(1, 2), (2, 2), (999, 0)])
@@ -117,7 +117,7 @@ def test_list_slots_returns_bare_array_without_pii(client):
     assert len(payload) == 4
     assert all("error" not in row for row in payload)
     assert all("email" not in row and "volunteer_name" not in row for row in payload)
-    assert [row["remaining"] for row in payload] == [5, 6, 5, 0]
+    assert [row["remaining"] for row in payload] == [6, 5, 5, 0]
 
 
 def test_list_slots_filters_query_parameters(client):
