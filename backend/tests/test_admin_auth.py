@@ -1,7 +1,21 @@
 """Unit and integration tests for admin authentication."""
 
 import app.config as app_config
-from fastapi.testclient import TestClient
+from app.db import get_connection
+
+
+def insert_slot(db_path):
+    conn = get_connection(db_path)
+    try:
+        cursor = conn.execute(
+            "INSERT INTO volunteer_slots "
+            "(event_id, date, start_time, end_time, capacity, booked) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (1, "2026-10-17", "09:00", "12:00", 2, 0),
+        )
+        return cursor.lastrowid
+    finally:
+        conn.close()
 
 
 def test_admin_booking_missing_token_returns_403(client, db_path):
@@ -25,7 +39,6 @@ def test_empty_admin_secret_returns_403(client, db_path, monkeypatch):
 
 def test_admin_booking_valid_token_can_read_booking(client, db_path):
     from app.db import create_booking
-    from tests.test_bookings import insert_slot
 
     slot_id = insert_slot(db_path)
     booking = create_booking(
@@ -47,7 +60,6 @@ def test_admin_booking_not_found_returns_contract_error(client):
 
 def test_admin_booking_rate_limit_returns_standard_envelope(client, db_path, monkeypatch):
     from app.db import create_booking
-    from tests.test_bookings import insert_slot
     from app.rate_limit import limiter
 
     slot_id = insert_slot(db_path)
