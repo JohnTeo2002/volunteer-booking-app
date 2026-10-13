@@ -1,7 +1,7 @@
 """Schema creation and constraint tests against a real file-backed SQLite DB.
 
 Uses pytest's tmp_path. Not :memory: because the concurrency tests need a shared file.
-Requires pytest, which is not yet in a requirements file (see PR notes).
+Pytest is installed through requirements-dev.txt.
 """
 
 import sqlite3
