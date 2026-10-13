@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 # These values are only defaults; callers can still provide their own test config.
-os.environ.setdefault("ADMIN_TOKEN", "test-admin-token")
+os.environ["ADMIN_TOKEN"] = "secret-token"
 os.environ["DISABLE_RATE_LIMIT"] = "1"
 
 
