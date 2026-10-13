@@ -22,7 +22,7 @@ function friendlyError(error: unknown): { title: string; description: string } {
     if (error.code === 'SLOT_FULL') {
       return {
         title: 'This slot is full',
-        description: 'Someone else may have taken the remaining spot. Please choose another slot.',
+        description: `${error.message} Please choose another slot.`,
       };
     }
     if (error.code === 'DUPLICATE_BOOKING') {
