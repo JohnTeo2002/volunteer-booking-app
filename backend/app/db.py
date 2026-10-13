@@ -144,3 +144,19 @@ def create_booking(
             raise
     finally:
         conn.close()
+
+
+def get_booking(
+    booking_id: int, db_path: str | Path | None = None
+) -> dict[str, int | str] | None:
+    """Return one booking by ID, or None if no booking exists."""
+    conn = get_connection(db_path)
+    try:
+        row = conn.execute(
+            "SELECT id, slot_id, volunteer_name, email, phone, created_at "
+            "FROM bookings WHERE id = ?",
+            (booking_id,),
+        ).fetchone()
+        return dict(row) if row is not None else None
+    finally:
+        conn.close()
