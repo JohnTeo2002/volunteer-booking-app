@@ -79,3 +79,29 @@ def test_admin_booking_rate_limit_returns_standard_envelope(client, db_path, mon
     assert responses[10].status_code == 429
     assert responses[10].json()["error"]["code"] == "RATE_LIMITED"
     assert responses[10].json()["error"]["details"] is None
+
+
+def test_post_booking_rate_limit_returns_standard_envelope(client, db_path, monkeypatch):
+    from app.db import create_booking
+    from app.rate_limit import limiter
+
+    slot_id = insert_slot(db_path)
+    create_booking(slot_id, "Existing", "existing@example.com", "555-1234", db_path)
+    monkeypatch.setattr(limiter, "enabled", True)
+
+    responses = [
+        client.post(
+            "/book",
+            json={
+                "slot_id": slot_id,
+                "volunteer_name": f"Volunteer {index}",
+                "email": f"volunteer{index}@example.com",
+                "phone": "555-1234",
+            },
+        )
+        for index in range(11)
+    ]
+    assert all(response.status_code == 201 for response in responses[:9])
+    assert responses[9].status_code == 409
+    assert responses[10].status_code == 429
+    assert responses[10].json()["error"]["code"] == "RATE_LIMITED"
