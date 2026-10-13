@@ -36,6 +36,7 @@ def db_path(tmp_path):
 @pytest.fixture
 def app(db_path, monkeypatch):
     """Build an isolated test app backed by the fixture database."""
+
     def fixture_get_slots(event_id=None, date=None):
         return get_slots(event_id=event_id, date=date, db_path=db_path)
 
@@ -115,8 +116,17 @@ def test_list_slots_returns_bare_array_without_pii(client):
     payload = response.json()
     assert isinstance(payload, list)
     assert len(payload) == 4
-    assert all("error" not in row for row in payload)
-    assert all("email" not in row and "volunteer_name" not in row for row in payload)
+    expected_fields = {
+        "id",
+        "event_id",
+        "date",
+        "start_time",
+        "end_time",
+        "capacity",
+        "booked",
+        "remaining",
+    }
+    assert all(set(row) == expected_fields for row in payload)
     assert [row["remaining"] for row in payload] == [6, 5, 5, 0]
 
 
@@ -137,7 +147,10 @@ def test_list_slots_rejects_invalid_event_id(client, event_id):
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize("date", ["17-10-2026", "2026-13-01", "not-a-date", "20261017", "2026-1-7"])
+@pytest.mark.parametrize(
+    "date",
+    ["17-10-2026", "2026-13-01", "not-a-date", "20261017", "2026-1-7"],
+)
 def test_list_slots_rejects_invalid_date(client, date):
     """Malformed dates return a validation response."""
     response = client.get(f"/slots?date={date}")
