@@ -137,7 +137,7 @@ def test_list_slots_rejects_invalid_event_id(client, event_id):
     assert response.status_code == 422
 
 
-@pytest.mark.parametrize("date", ["17-10-2026", "2026-13-01", "not-a-date"])
+@pytest.mark.parametrize("date", ["17-10-2026", "2026-13-01", "not-a-date", "20261017", "2026-1-7"])
 def test_list_slots_rejects_invalid_date(client, date):
     """Malformed dates return a validation response."""
     response = client.get(f"/slots?date={date}")
