@@ -42,3 +42,16 @@ class BookingRequest(BaseModel):
 
 
 PathId = Annotated[int, Path(gt=0)]
+
+
+class SlotResponse(BaseModel):
+    """Public slot response; contains no volunteer personal information."""
+
+    id: int = Field(ge=1)
+    event_id: int = Field(ge=1)
+    date: str
+    start_time: str
+    end_time: str
+    capacity: int = Field(ge=1)
+    booked: int = Field(ge=0)
+    remaining: int = Field(ge=0)
