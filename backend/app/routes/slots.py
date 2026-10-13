@@ -17,7 +17,10 @@ def validate_contract_date(value: object) -> date_type | None:
     """Require a real calendar date written exactly as YYYY-MM-DD."""
     if value is None:
         return None
-    if not isinstance(value, str) or re.fullmatch(r"\d{4}-\d{2}-\d{2}", value) is None:
+    if (
+        not isinstance(value, str)
+        or re.fullmatch(r"\d{4}-\d{2}-\d{2}", value) is None
+    ):
         raise ValueError("Date must be in YYYY-MM-DD format.")
     try:
         return date_type.fromisoformat(value)
