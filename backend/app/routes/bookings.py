@@ -4,10 +4,10 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 
-from app.db import DuplicateBooking, SlotFull, SlotNotFound, create_booking
-from app.schemas import BookingRequest, BookingResponse
 from app.config import BOOKING_RATE_LIMIT
+from app.db import DuplicateBooking, SlotFull, SlotNotFound, create_booking
 from app.rate_limit import limiter
+from app.schemas import BookingRequest, BookingResponse
 
 router = APIRouter()
 
