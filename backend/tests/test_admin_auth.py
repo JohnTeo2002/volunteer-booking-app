@@ -102,3 +102,12 @@ def test_post_booking_rate_limit_returns_standard_envelope(client, db_path, monk
     assert all(response.status_code == 201 for response in responses[:10])
     assert responses[10].status_code == 429
     assert responses[10].json()["error"]["code"] == "RATE_LIMITED"
+
+
+def test_admin_booking_non_ascii_token_returns_403(client):
+    response = client.get(
+        "/booking/1",
+        headers={"X-Admin-Token": "wrong-tøken"},
+    )
+    assert response.status_code == 403
+    assert response.json()["error"]["code"] == "UNAUTHORIZED"
