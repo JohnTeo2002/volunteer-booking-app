@@ -1,31 +1,32 @@
-"""Concurrency regression tests for the atomic booking endpoint (Issue #13)."""
+"""Concurrency regression test for POST /book (Issue #13)."""
 
 from concurrent.futures import ThreadPoolExecutor
-import os
-
-from fastapi.testclient import TestClient
 
 from app.db import get_connection, init_db
-os.environ.setdefault("ADMIN_TOKEN", "secret-token")
-
-from app.main import app
+from fastapi.testclient import TestClient
 
 
-def test_ten_requests_for_five_spots(tmp_path, monkeypatch):
-    """Only five of ten simultaneous volunteers can reserve five spots."""
-    path = tmp_path / "concurrency.db"
-    init_db(path)
-    monkeypatch.setattr("app.db.DB_PATH", str(path))
-    conn = get_connection(path)
+def test_ten_concurrent_requests_for_five_spots(tmp_path, monkeypatch):
+    """Only five of ten concurrent booking requests can claim a five-capacity slot."""
+    db_path = tmp_path / "concurrency.db"
+    init_db(db_path)
+    monkeypatch.setattr("app.db.DB_PATH", str(db_path))
+
+    conn = get_connection(db_path)
     try:
         conn.execute(
-            "INSERT INTO volunteer_slots "
-            "(event_id, date, start_time, end_time, capacity, booked) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
+            """
+            INSERT INTO volunteer_slots
+                (event_id, date, start_time, end_time, capacity, booked)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
             (1, "2026-10-17", "09:00", "12:00", 5, 0),
         )
     finally:
         conn.close()
+
+    # Import after conftest establishes ADMIN_TOKEN and disables rate limiting.
+    from app.main import app
 
     def attempt(index: int) -> int:
         with TestClient(app, raise_server_exceptions=False) as client:
@@ -46,14 +47,16 @@ def test_ten_requests_for_five_spots(tmp_path, monkeypatch):
     assert statuses.count(201) == 5
     assert statuses.count(409) == 5
 
-    conn = get_connection(path)
+    conn = get_connection(db_path)
     try:
-        booked = conn.execute(
+        slot = conn.execute(
             "SELECT booked FROM volunteer_slots WHERE id = ?", (1,)
-        ).fetchone()["booked"]
-        count = conn.execute(
+        ).fetchone()
+        booking_count = conn.execute(
             "SELECT COUNT(*) FROM bookings WHERE slot_id = ?", (1,)
         ).fetchone()[0]
-        assert booked == count == 5
+
+        assert slot["booked"] == 5
+        assert booking_count == 5
     finally:
         conn.close()
