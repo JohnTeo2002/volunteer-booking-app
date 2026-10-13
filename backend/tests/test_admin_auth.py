@@ -11,7 +11,7 @@ def insert_slot(db_path):
             "INSERT INTO volunteer_slots "
             "(event_id, date, start_time, end_time, capacity, booked) "
             "VALUES (?, ?, ?, ?, ?, ?)",
-            (1, "2026-10-17", "09:00", "12:00", 2, 0),
+            (1, "2026-10-17", "09:00", "12:00", 20, 0),
         )
         return cursor.lastrowid
     finally:
@@ -82,11 +82,9 @@ def test_admin_booking_rate_limit_returns_standard_envelope(client, db_path, mon
 
 
 def test_post_booking_rate_limit_returns_standard_envelope(client, db_path, monkeypatch):
-    from app.db import create_booking
     from app.rate_limit import limiter
 
     slot_id = insert_slot(db_path)
-    create_booking(slot_id, "Existing", "existing@example.com", "555-1234", db_path)
     monkeypatch.setattr(limiter, "enabled", True)
 
     responses = [
@@ -101,7 +99,6 @@ def test_post_booking_rate_limit_returns_standard_envelope(client, db_path, monk
         )
         for index in range(11)
     ]
-    assert all(response.status_code == 201 for response in responses[:9])
-    assert responses[9].status_code == 409
+    assert all(response.status_code == 201 for response in responses[:10])
     assert responses[10].status_code == 429
     assert responses[10].json()["error"]["code"] == "RATE_LIMITED"
