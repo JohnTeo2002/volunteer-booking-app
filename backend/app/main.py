@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import CORS_ORIGINS
 from app.db import init_db
+from app.routes.slots import router as slots_router
 
 
 @asynccontextmanager
@@ -21,6 +22,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Food Bank Volunteer Booking API", version="1.0.0", lifespan=lifespan
 )
+app.include_router(slots_router)
 
 # CORS middleware
 app.add_middleware(
@@ -46,7 +48,12 @@ async def validation_exception_handler(
     for error in exc.errors():
         loc = ".".join(str(l) for l in error.get("loc", []))
         msg = error.get("msg", "Invalid value")
-        details.append({"field": loc.replace("body.", ""), "message": msg})
+        field = (
+            loc.removeprefix("body.")
+            .removeprefix("query.")
+            .removeprefix("path.")
+        )
+        details.append({"field": field, "message": msg})
 
     return JSONResponse(
         status_code=422,
