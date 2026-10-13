@@ -1,10 +1,13 @@
 """Concurrency regression tests for the atomic booking endpoint (Issue #13)."""
 
 from concurrent.futures import ThreadPoolExecutor
+import os
 
 from fastapi.testclient import TestClient
 
 from app.db import get_connection, init_db
+os.environ.setdefault("ADMIN_TOKEN", "secret-token")
+
 from app.main import app
 
 
