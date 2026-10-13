@@ -1,51 +1,11 @@
-import { Button, Space, Table, Tag, Typography } from 'antd';
+import { Alert, Button, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
 import type { Slot } from '../types/api';
-
-const MOCK_SLOTS: Slot[] = [
-  {
-    id: 1,
-    event_id: 1,
-    date: '2026-10-17',
-    start_time: '09:00',
-    end_time: '12:00',
-    capacity: 10,
-    booked: 6,
-    remaining: 4,
-  },
-  {
-    id: 2,
-    event_id: 1,
-    date: '2026-10-17',
-    start_time: '13:00',
-    end_time: '16:00',
-    capacity: 8,
-    booked: 8,
-    remaining: 0,
-  },
-  {
-    id: 3,
-    event_id: 2,
-    date: '2026-10-18',
-    start_time: '09:00',
-    end_time: '12:00',
-    capacity: 6,
-    booked: 2,
-    remaining: 4,
-  },
-  {
-    id: 4,
-    event_id: 2,
-    date: '2026-10-18',
-    start_time: '13:00',
-    end_time: '16:00',
-    capacity: 12,
-    booked: 12,
-    remaining: 0,
-  },
-];
+import { useSlots } from '../hooks/useSlots';
 
 export default function SlotList() {
+  const { slots, lastUpdated, isStale } = useSlots();
+
   const columns: TableColumnsType<Slot> = [
     {
       title: 'Date',
@@ -86,10 +46,22 @@ export default function SlotList() {
       <Typography.Title level={3} id="available-slots-heading">
         Available volunteer slots
       </Typography.Title>
+      {isStale && (
+        <Alert
+          type="warning"
+          showIcon
+          message="Slot data may be out of date"
+          description="We couldn't refresh the slots. Showing the most recently loaded data."
+          style={{ marginBottom: 16 }}
+        />
+      )}
+      <Typography.Paragraph type="secondary">
+        Last updated: {lastUpdated ?? 'Waiting for first update'}
+      </Typography.Paragraph>
       <Table<Slot>
         rowKey="id"
         columns={columns}
-        dataSource={MOCK_SLOTS}
+        dataSource={slots}
         pagination={false}
         locale={{ emptyText: 'No volunteer slots available' }}
       />
