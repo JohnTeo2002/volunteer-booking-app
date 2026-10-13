@@ -62,7 +62,9 @@ def test_admin_booking_not_found_returns_contract_error(client):
     assert response.json()["error"]["code"] == "BOOKING_NOT_FOUND"
 
 
-def test_admin_booking_rate_limit_returns_standard_envelope(client, db_path, monkeypatch):
+def test_admin_booking_rate_limit_returns_standard_envelope(
+    client, db_path, monkeypatch
+):
     from app.db import create_booking
     from app.rate_limit import limiter
 
@@ -85,7 +87,9 @@ def test_admin_booking_rate_limit_returns_standard_envelope(client, db_path, mon
     assert responses[10].json()["error"]["details"] is None
 
 
-def test_post_booking_rate_limit_returns_standard_envelope(client, db_path, monkeypatch):
+def test_post_booking_rate_limit_returns_standard_envelope(
+    client, db_path, monkeypatch
+):
     from app.rate_limit import limiter
 
     slot_id = insert_slot(db_path)

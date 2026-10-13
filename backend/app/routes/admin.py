@@ -26,10 +26,8 @@ def get_booking_route(
             status_code=404,
             detail={"code": "BOOKING_NOT_FOUND", "message": "Booking not found."},
         )
-    timestamp = datetime.strptime(
-        str(booking["created_at"]), "%Y-%m-%d %H:%M:%S"
-    )
-    booking["created_at"] = timestamp.replace(tzinfo=UTC).isoformat().replace(
-        "+00:00", "Z"
+    timestamp = datetime.strptime(str(booking["created_at"]), "%Y-%m-%d %H:%M:%S")
+    booking["created_at"] = (
+        timestamp.replace(tzinfo=UTC).isoformat().replace("+00:00", "Z")
     )
     return BookingResponse.model_validate(booking)

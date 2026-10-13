@@ -50,6 +50,7 @@ async def rate_limit_exception_handler(
         ),
     )
 
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
