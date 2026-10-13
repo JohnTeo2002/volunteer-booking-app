@@ -1,8 +1,8 @@
 """Seed the configured SQLite database with demo volunteer slots."""
 
-import os
 from pathlib import Path
 
+from app.config import DB_PATH
 from app.db import get_connection, init_db
 
 DEMO_SLOTS: tuple[tuple[int, str, str, str, int, int], ...] = (
@@ -16,7 +16,7 @@ DEMO_SLOTS: tuple[tuple[int, str, str, str, int, int], ...] = (
 
 def seed_demo_slots(db_path: str | Path | None = None) -> int:
     """Create tables and insert demo slots if the database has no slots."""
-    configured_path = db_path if db_path is not None else os.getenv("DB_PATH", "app.db")
+    configured_path = db_path if db_path is not None else DB_PATH
     init_db(configured_path)
     conn = get_connection(configured_path)
     try:
