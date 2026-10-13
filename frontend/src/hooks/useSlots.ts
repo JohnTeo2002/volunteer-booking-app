@@ -10,6 +10,14 @@ export interface UseSlotsResult {
   isStale: boolean;
 }
 
+function formatTime(date: Date): string {
+  return new Intl.DateTimeFormat(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(date);
+}
+
 /** Poll GET /slots every 10 seconds, retaining the last good result on errors. */
 export function useSlots(): UseSlotsResult {
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -20,13 +28,7 @@ export function useSlots(): UseSlotsResult {
     try {
       const latestSlots = await fetchSlots();
       setSlots(latestSlots);
-      setLastUpdated(
-        new Intl.DateTimeFormat(undefined, {
-          hour: '2-digit',
-          minute: '2-digit',
-          hourCycle: 'h23',
-        }).format(new Date()),
-      );
+      setLastUpdated(formatTime(new Date()));
       setIsStale(false);
     } catch {
       // Keep the last successful data and timestamp; show that it's stale.
@@ -38,20 +40,12 @@ export function useSlots(): UseSlotsResult {
     let isMounted = true;
 
     const poll = async () => {
-      if (!isMounted) return;
-
       try {
         const latestSlots = await fetchSlots();
         if (!isMounted) return;
 
         setSlots(latestSlots);
-        setLastUpdated(
-          new Intl.DateTimeFormat(undefined, {
-            hour: '2-digit',
-            minute: '2-digit',
-            hourCycle: 'h23',
-          }).format(new Date()),
-        );
+        setLastUpdated(formatTime(new Date()));
         setIsStale(false);
       } catch {
         if (isMounted) {
