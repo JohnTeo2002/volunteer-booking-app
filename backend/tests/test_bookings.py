@@ -67,10 +67,9 @@ def assert_consistent(db_path, slot_id, expected):
 
 
 @pytest.fixture(autouse=True)
-def assert_all_slot_counters_match_booking_rows(request):
+def assert_all_slot_counters_match_booking_rows(db_path):
     """After each booking test, ensure booked matches persisted booking rows."""
     yield
-    db_path = request.getfixturevalue("db_path")
     conn = get_connection(db_path)
     try:
         rows = conn.execute(
@@ -92,7 +91,12 @@ def test_success_returns_201_booking_and_increments_once(client, db_path):
     assert response.status_code == 201
     body = response.json()
     assert set(body) == {
-        "id", "slot_id", "volunteer_name", "email", "phone", "created_at"
+        "id",
+        "slot_id",
+        "volunteer_name",
+        "email",
+        "phone",
+        "created_at",
     }
     assert body["slot_id"] == slot_id
     assert body["email"] == "jane@example.com"
@@ -106,7 +110,9 @@ def test_missing_slot_returns_404(client, db_path):
     response = client.post("/book", json=payload(999))
     assert response.status_code == 404
     assert response.json()["error"] == {
-        "code": "SLOT_NOT_FOUND", "message": "Slot not found.", "details": None
+        "code": "SLOT_NOT_FOUND",
+        "message": "Slot not found.",
+        "details": None,
     }
     conn = get_connection(db_path)
     try:
@@ -181,7 +187,8 @@ def test_concurrent_booking_never_overbooks(client, db_path):
     assert sum(r.status_code == 409 for r in responses) == 5
     assert all(
         r.json()["error"]["code"] == "SLOT_FULL"
-        for r in responses if r.status_code == 409
+        for r in responses
+        if r.status_code == 409
     )
     assert_consistent(db_path, slot_id, 5)
 

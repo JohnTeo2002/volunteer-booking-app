@@ -11,6 +11,7 @@ os.environ["ADMIN_TOKEN"] = "secret-token"
 from app.config import ADMIN_TOKEN, CORS_ORIGINS
 from app.main import app
 
+
 def test_config_admin_token():
     """Verify ADMIN_TOKEN is configured."""
     assert ADMIN_TOKEN == "secret-token"

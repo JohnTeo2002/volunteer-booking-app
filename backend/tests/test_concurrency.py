@@ -2,8 +2,9 @@
 
 from concurrent.futures import ThreadPoolExecutor
 
-from app.db import get_connection, init_db
 from fastapi.testclient import TestClient
+
+from app.db import get_connection, init_db
 
 
 def test_ten_concurrent_requests_for_five_spots(tmp_path, monkeypatch):
