@@ -5,13 +5,14 @@ This procedure is for Issue #21. It deploys a small FastAPI smoke app first, ver
 ## 1. Create the Railway service
 
 1. In Railway, create a project and deploy this GitHub repository.
-2. Ensure Railway builds using the repository-root `Dockerfile` and `railway.toml`.
-3. In the service's **Settings → Volumes**, add a volume mounted at exactly `/data`.
-4. In **Variables**, set:
+2. Ensure Railway builds using the repository-root `Dockerfile` (Railway detects it automatically). Configure build and deploy settings in the Railway service dashboard; this guide intentionally does not use legacy `railway.toml` Config-as-Code because Railway documents that new services cannot opt into that mechanism.
+3. In **Settings → Deploy**, set the health check path to `/health` and the health check timeout to 120 seconds.
+4. In the service's **Settings → Volumes**, add a volume mounted at exactly `/data`.
+5. In **Variables**, set:
    - `DB_PATH=/data/app.db`
    - `ADMIN_TOKEN=<a long random secret>`
    - `CORS_ORIGINS=http://localhost:5173,https://<your-frontend-domain>`
-5. In **Settings → Networking**, generate a public domain.
+6. In **Settings → Networking**, generate a public domain.
 
 Do not use a wildcard CORS origin. Keep `ADMIN_TOKEN` only in Railway's server-side variables; do not expose it as a Vite variable.
 
@@ -29,21 +30,21 @@ Call `GET /persistence-test` and confirm it reports five slots.
 
 ## 3. Redeploy the real application
 
-After the smoke test passes, change the `startCommand` in the root `railway.toml` from:
+After the smoke test passes, change the final `CMD` in the root `Dockerfile` from:
 
-```toml
-startCommand = "sh -c 'uvicorn app.railway_smoke:app --host 0.0.0.0 --port ${PORT:-8000}'"
+```dockerfile
+CMD ["sh", "-c", "uvicorn app.railway_smoke:app --host 0.0.0.0 --port ${PORT:-8000}"]
 ```
 
 to:
 
-```toml
-startCommand = "sh -c 'uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}'"
+```dockerfile
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
 ```
 
 Commit and push that change so Railway deploys the real app. Keep the volume mounted at `/data` and keep `DB_PATH=/data/app.db` unchanged.
 
-Along with changing the start command, change `healthcheckPath` in `railway.toml` from `/health` to `/slots`, because the real application does not expose the smoke app's `/health` path.
+In the Railway dashboard, change the health check path from `/health` to `/slots`, because the real application does not expose the smoke app's `/health` path.
 
 After the redeploy:
 
@@ -51,7 +52,7 @@ After the redeploy:
 - `/slots` should return the five seeded slot rows. This verifies that the SQLite data survived deployment replacement.
 - Railway's configured health check should pass against `/slots`.
 
-The smoke app and its `/persistence-test` endpoints are temporary deployment checks. The final deployed start command should be `app.main:app`, not `app.railway_smoke:app`.
+The smoke app and its `/persistence-test` endpoints are temporary deployment checks. The final Dockerfile command should run `app.main:app`, not `app.railway_smoke:app`.
 
 ## Validation limitation
 
