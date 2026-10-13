@@ -48,7 +48,8 @@ async def validation_exception_handler(
     for error in exc.errors():
         loc = ".".join(str(l) for l in error.get("loc", []))
         msg = error.get("msg", "Invalid value")
-        details.append({"field": loc.replace("body.", ""), "message": msg})
+        field = loc.removeprefix("body.").removeprefix("query.").removeprefix("path.")
+        details.append({"field": field, "message": msg})
 
     return JSONResponse(
         status_code=422,
