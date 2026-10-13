@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import CORS_ORIGINS
 from app.db import init_db
+from app.routes.bookings import router as bookings_router
 from app.routes.slots import router as slots_router
 
 
@@ -23,6 +24,7 @@ app = FastAPI(
     title="Food Bank Volunteer Booking API", version="1.0.0", lifespan=lifespan
 )
 app.include_router(slots_router)
+app.include_router(bookings_router)
 
 # CORS middleware
 app.add_middleware(
