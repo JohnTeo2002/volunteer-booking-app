@@ -23,7 +23,7 @@ Open these paths on the generated public domain:
 - `/health` should return `{"status":"ok"}`.
 - `/docs` should load FastAPI's Swagger UI.
 
-Call `POST /persistence-test` once. It seeds five demo slot rows into the database configured by `DB_PATH`. The response reports `inserted_rows` and `total_slots`. Calling it again is safe; the seed script does not duplicate rows.
+Call `POST /persistence-test` once with the header `X-Admin-Token: <your ADMIN_TOKEN>`. This protected smoke-only endpoint seeds five demo slot rows into the database configured by `DB_PATH`. The response reports `inserted_rows` and `total_slots`. Calling it again is safe; the seed script does not duplicate rows. Do not send the token in a URL or expose it in frontend code.
 
 Call `GET /persistence-test` and confirm it reports five slots.
 
@@ -43,11 +43,13 @@ startCommand = "sh -c 'uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}'
 
 Commit and push that change so Railway deploys the real app. Keep the volume mounted at `/data` and keep `DB_PATH=/data/app.db` unchanged.
 
+Along with changing the start command, change `healthcheckPath` in `railway.toml` from `/health` to `/slots`, because the real application does not expose the smoke app's `/health` path.
+
 After the redeploy:
 
 - `/docs` should still load.
 - `/slots` should return the five seeded slot rows. This verifies that the SQLite data survived deployment replacement.
-- `/health` is no longer part of the real app unless a health route is added separately; use `/slots` and `/docs` for the real-app verification.
+- Railway's configured health check should pass against `/slots`.
 
 The smoke app and its `/persistence-test` endpoints are temporary deployment checks. The final deployed start command should be `app.main:app`, not `app.railway_smoke:app`.
 
