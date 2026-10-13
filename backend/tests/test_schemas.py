@@ -50,7 +50,8 @@ def test_booking_request_invalid_name(name):
 
 @pytest.mark.parametrize(
     "email",
-    ["not-an-email", "missing-at.com", "a" * 245 + "@example.com"],
+    # 64-char local part (the max), 3 valid 63-char labels, total 260 > 254
+    ["not-an-email", "missing-at.com", "a" * 64 + "@" + ".".join(["a" * 63] * 3) + ".com"],
 )
 def test_booking_request_invalid_email(email):
     """Test invalid email formats or lengths."""
