@@ -12,6 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from app.config import CORS_ORIGINS
 from app.db import init_db
 from app.rate_limit import limiter
+from app.routes.admin import router as admin_router
 from app.routes.bookings import router as bookings_router
 from app.routes.slots import router as slots_router
 
@@ -28,6 +29,7 @@ app = FastAPI(
 )
 app.include_router(slots_router)
 app.include_router(bookings_router)
+app.include_router(admin_router, prefix="/booking", tags=["admin"])
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
