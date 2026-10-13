@@ -1,6 +1,6 @@
 """Public booking endpoint and domain-error to HTTP mapping."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, Request
 
@@ -44,7 +44,7 @@ def book_slot(request: Request, booking: BookingRequest) -> BookingResponse:
 
     # SQLite CURRENT_TIMESTAMP is UTC but lacks the ISO 8601 T and Z markers.
     timestamp = datetime.strptime(str(result["created_at"]), "%Y-%m-%d %H:%M:%S")
-    result["created_at"] = timestamp.replace(tzinfo=timezone.utc).isoformat().replace(
-        "+00:00", "Z"
+    result["created_at"] = (
+        timestamp.replace(tzinfo=UTC).isoformat().replace("+00:00", "Z")
     )
     return BookingResponse.model_validate(result)

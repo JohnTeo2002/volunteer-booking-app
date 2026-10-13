@@ -104,9 +104,7 @@ def test_get_slots_combines_filters(db_path):
     """Both query filters can be combined."""
     rows = get_slots(event_id=1, date="2026-10-17", db_path=db_path)
     assert len(rows) == 2
-    assert all(
-        row["event_id"] == 1 and row["date"] == "2026-10-17" for row in rows
-    )
+    assert all(row["event_id"] == 1 and row["date"] == "2026-10-17" for row in rows)
 
 
 def test_list_slots_returns_bare_array_without_pii(client):
