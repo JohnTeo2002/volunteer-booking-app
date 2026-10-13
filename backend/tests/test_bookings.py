@@ -1,15 +1,12 @@
 """Tests for the atomic POST /book transaction and API contract."""
 
-from concurrent.futures import ThreadPoolExecutor
 import sqlite3
-import os
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.db import get_connection, init_db
-os.environ.setdefault("ADMIN_TOKEN", "secret-token")
-
 from app.main import app
 
 
@@ -65,6 +62,25 @@ def assert_consistent(db_path, slot_id, expected):
             "SELECT COUNT(*) FROM bookings WHERE slot_id = ?", (slot_id,)
         ).fetchone()[0]
         assert booked == count == expected
+    finally:
+        conn.close()
+
+
+@pytest.fixture(autouse=True)
+def assert_all_slot_counters_match_booking_rows(request):
+    """After each booking test, ensure booked matches persisted booking rows."""
+    yield
+    db_path = request.getfixturevalue("db_path")
+    conn = get_connection(db_path)
+    try:
+        rows = conn.execute(
+            "SELECT id, booked FROM volunteer_slots ORDER BY id"
+        ).fetchall()
+        for row in rows:
+            booking_count = conn.execute(
+                "SELECT COUNT(*) FROM bookings WHERE slot_id = ?", (row["id"],)
+            ).fetchone()[0]
+            assert row["booked"] == booking_count
     finally:
         conn.close()
 
