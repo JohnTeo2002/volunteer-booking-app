@@ -2,11 +2,15 @@ import { useState } from 'react';
 import { Alert, Button, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
 import type { Slot } from '../types/api';
-import { useSlots } from '../hooks/useSlots';
 import BookingForm from './BookingForm';
 
-export default function SlotList() {
-  const { slots, lastUpdated, isStale } = useSlots();
+interface SlotListProps {
+  slots: Slot[];
+  lastUpdated: string | null;
+  isStale: boolean;
+}
+
+export default function SlotList({ slots, lastUpdated, isStale }: SlotListProps) {
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
   const columns: TableColumnsType<Slot> = [
