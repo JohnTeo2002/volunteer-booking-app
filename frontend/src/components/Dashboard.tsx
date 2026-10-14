@@ -26,7 +26,7 @@ import {
 
 import { fetchBooking } from '../api/client';
 import { ApiError, type Booking, type Slot } from '../types/api';
-import { useSlots } from '../hooks/useSlots';
+
 
 interface LookupFields {
   booking_id: string;
@@ -50,8 +50,13 @@ function formatDateTime(value: string): string {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
-export default function Dashboard() {
-  const { slots, lastUpdated, isStale } = useSlots();
+interface DashboardProps {
+  slots: Slot[];
+  lastUpdated: string | null;
+  isStale: boolean;
+}
+
+export default function Dashboard({ slots, lastUpdated, isStale }: DashboardProps) {
   const [adminToken, setAdminToken] = useState('');
   const [booking, setBooking] = useState<Booking | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
