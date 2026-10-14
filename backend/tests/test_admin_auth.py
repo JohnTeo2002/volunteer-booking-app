@@ -125,6 +125,5 @@ def test_empty_admin_token_fails_fast_on_startup(monkeypatch):
     import app.main as main_module
 
     monkeypatch.setattr(main_module, "ADMIN_TOKEN", "")
-    with pytest.raises(RuntimeError, match="ADMIN_TOKEN"):
-        with TestClient(main_module.app):
-            pass
+    with pytest.raises(RuntimeError, match="ADMIN_TOKEN"), TestClient(main_module.app):
+        pass
