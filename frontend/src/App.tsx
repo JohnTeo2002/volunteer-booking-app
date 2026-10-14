@@ -2,8 +2,11 @@ import { Card, Divider, Typography } from 'antd';
 
 import Dashboard from './components/Dashboard';
 import SlotList from './components/SlotList';
+import { useSlots } from './hooks/useSlots';
 
 export default function App() {
+  const { slots, lastUpdated, isStale } = useSlots();
+
   return (
     <div
       style={{
@@ -17,9 +20,9 @@ export default function App() {
         <Typography.Paragraph>
           View live capacity, look up a booking as an admin, or book an available volunteer slot.
         </Typography.Paragraph>
-        <Dashboard />
+        <Dashboard slots={slots} lastUpdated={lastUpdated} isStale={isStale} />
         <Divider />
-        <SlotList />
+        <SlotList slots={slots} lastUpdated={lastUpdated} isStale={isStale} />
       </Card>
     </div>
   );
