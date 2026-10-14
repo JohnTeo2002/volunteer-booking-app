@@ -1,16 +1,14 @@
 import { useState } from 'react';
-import { Alert, Button, Space, Table, Tag, Typography } from 'antd';
+import { Button, Space, Table, Tag, Typography } from 'antd';
 import type { TableColumnsType } from 'antd';
 import type { Slot } from '../types/api';
 import BookingForm from './BookingForm';
 
 interface SlotListProps {
   slots: Slot[];
-  lastUpdated: string | null;
-  isStale: boolean;
 }
 
-export default function SlotList({ slots, lastUpdated, isStale }: SlotListProps) {
+export default function SlotList({ slots }: SlotListProps) {
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
   const columns: TableColumnsType<Slot> = [
@@ -61,18 +59,6 @@ export default function SlotList({ slots, lastUpdated, isStale }: SlotListProps)
       <Typography.Title level={3} id="available-slots-heading">
         Available volunteer slots
       </Typography.Title>
-      {isStale && (
-        <Alert
-          type="warning"
-          showIcon
-          message="Slot data may be out of date"
-          description="We couldn't refresh the slots. Showing the most recently loaded data."
-          style={{ marginBottom: 16 }}
-        />
-      )}
-      <Typography.Paragraph type="secondary">
-        Last updated: {lastUpdated ?? 'Waiting for first update'}
-      </Typography.Paragraph>
       <Table<Slot>
         rowKey="id"
         columns={columns}
