@@ -22,7 +22,7 @@ export default function App() {
         </Typography.Paragraph>
         <Dashboard slots={slots} lastUpdated={lastUpdated} isStale={isStale} />
         <Divider />
-        <SlotList slots={slots} lastUpdated={lastUpdated} isStale={isStale} />
+        <SlotList slots={slots} />
       </Card>
     </div>
   );
